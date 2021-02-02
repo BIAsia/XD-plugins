@@ -14,8 +14,15 @@
     "width" : 48,
     "height" : 48
   } ],
-  "uiEntryPoints" : [ {
+  "uiEntryPoints" : [ 
+    {
+      "type" : "panel",
+      "label" : "show selected shadows", 
+      "panelId" : "showShadows"
+    },
+    {
     "type" : "menu",
+    "label" : "add shadow color to assets",
     "commandId" : "createRectangle"
   } ],
   "version" : "0.0.1"
