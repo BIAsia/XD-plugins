@@ -102,7 +102,100 @@ function outputParentDetails(child){
 let panel;
 function create() {
 	// [1]
-	const html = `
+	const html= `
+	<style>
+	
+		.asset {
+			margin: 8px 0px;
+			padding: 8px;
+			background: #ffffff;
+			border-radius: 8px;
+			display: flex;
+			align-items: center;
+		}
+	
+		.color {
+			width: 16px;
+			height: 16px;
+			border-radius: 2px;
+			background: #345678;
+			
+			display: inline-block;
+			margin: 0px 8px;
+			order: 1;
+		}
+		.asset > span {
+			padding: 0px 4px;
+			order: 2;
+		}
+		.editbtn {
+			margin: 0px 8px 0px 32px;
+			align-self:flex-end;
+			order: 3;
+		}
+		.grid {
+			flex: 1 1 auto;
+		}
+		label.grid > input {
+			width: 60px;
+		}
+		.show {
+			display: block;
+		}
+		.hide {
+			display: none;
+		}
+	</style>
+
+	
+
+	<form id="main">
+		<label>
+			<span>color hex</span>
+			<input type="text" placeholder="#00000000" id="inputColor">
+		</label>
+		<div class="grid">
+			<label class="grid">
+				<span>x</span>
+				<input type="number" placeholder="0" id="inputX">
+			</label>
+			<label class="grid">
+				<span>y</span>
+				<input type="number" placeholder="0" id="inputY">
+			</label>
+			<label class="grid">
+				<span>blur</span>
+				<input type="number" placeholder="0" id="inputBlur">
+			</label>
+		</div>
+
+			<footer>
+				<button id="ok" type="submit" uxp-variant="cta">Find shadows</button>
+			</footer>
+		</form>
+	
+	<div>
+		<h5>Shadow assets</h5>
+		<label id="colorNum">0</label>
+		<label>shadows:</label>
+		<form id="shadowList">
+			<div class="asset">
+				<div class="color" id="1_color"></div>
+				<span class="hex" id="1_hex">#345678</span>
+				<span class="alpha" id="1_alpha">90%</span>
+				<span class="x" id="1_x">0</span>
+				<span class="y" id="1_y">8</span>
+				<span class="blur" id="1_blur">32</span>
+				<button class="editbtn" id="1_edit" uxp-variant="action">apply</button>
+			</div>
+			
+		</form>
+		
+	</div>
+		
+	
+	`
+	const htmlbackup = `
 	<style>
 		.break {
 			flex-wrap: wrap;
@@ -144,7 +237,7 @@ function create() {
 	
 	<p id="warning">This plugin requires you to select a rectangle in the document. Please select a rectangle.</p>
 	`;
-	
+	/*
 	  function increaseRectangleSize() { // [2]
 		const { editDocument } = require("application"); // [3]
 		const height = Number(document.querySelector("#txtV").value); // [4]
@@ -156,11 +249,54 @@ function create() {
 		  selectedRectangle.width += width; // [8]
 		  selectedRectangle.height += height;
 		});
+	  }*/
+
+	  
+	  function findShadows(){
+		const { editDocument } = require("application");
+		console.log("find!");
+		editDocument({ editLabel: "generate shadow list"}, function(selection) {
+			shadowList = [];
+			nodeList = [];
+
+			let select = selection.items;
+			select.forEach((node)=>{traverseChildrenToFindShadow(node);});
+
+			const initHTML = `
+				<div class="color"></div>
+				<span class="hex">#345678</span>
+				<span class="alpha">90%</span>
+				<span class="x">0</span>
+				<span class="y">8</span>
+				<span class="blur">32</span>
+				<button class="editbtn" uxp-variant="action">apply</button>
+			`
+			
+			for (var i = 0; i < shadowList.length; i++) {
+				let shadow = shadowList[i];
+				let node = nodeList[i];
+				let alpha = (shadow.color.toRgba().a/255).toFixed(2);
+
+				let asset = document.createElement("div");
+				asset.className = "asset";
+				asset.innerHTML = initHTML;
+				asset.querySelector(".color").style.background = shadow.color.toHex(true);
+				asset.querySelector(".hex").textContent = shadow.color.toHex(true);
+				asset.querySelector(".alpha").textContent = alpha;
+				asset.querySelector(".x").textContent = shadow.x;
+				asset.querySelector(".y").textContent = shadow.y;
+				asset.querySelector(".blur").textContent = shadow.blur;
+				asset.querySelector(".editbtn").id = i;
+
+				document.querySelector("#shadowList").appendChild(asset);
+			}
+
+		})
 	  }
 	
 	  panel = document.createElement("div"); // [9]
 	  panel.innerHTML = html; // [10]
-	  panel.querySelector("form").addEventListener("submit", increaseRectangleSize); // [11]
+	  panel.querySelector("form").addEventListener("submit", findShadows); // [11]
 	
 	  return panel; // [12]
 }
@@ -174,6 +310,7 @@ function update(selection) {
 
 	const form = document.querySelector("form"); // [3]
 	const warning = document.querySelector("#warning"); // [4]
+	/*
 
 	if (!selection || !(selection.items[0] instanceof Rectangle)) { // [5]
 		form.className = "hide";
@@ -182,6 +319,7 @@ function update(selection) {
 		form.className = "show";
 		warning.className = "hide";
 	}
+	*/
 }
 
 module.exports = {
