@@ -1,0 +1,27 @@
+{
+  "name" : "wireframer",
+  "host" : {
+    "app" : "XD",
+    "minVersion" : "21.0"
+  },
+  "id" : "759c2047",
+  "icons" : [ {
+    "path" : "images/icon@1x.png",
+    "width" : 24,
+    "height" : 24
+  }, {
+    "path" : "images/icon@2x.png",
+    "width" : 48,
+    "height" : 48
+  } ],
+  "uiEntryPoints" : [ {
+    "type" : "menu",
+    "label": "wireframe selected",
+    "commandId" : "wireframe"
+  }, {
+    "type" : "menu",
+    "label": "add padding corners",
+    "commandId" : "addCorner"
+  } ],
+  "version" : "0.2.1"
+}
