@@ -6,14 +6,14 @@
 
 
 let scenegraph = require("scenegraph"); 
-const { alert } = require("./lib/dialogs.js");
+const {alert} = require("./lib/dialogs.js");
 var assets = require("assets");
-const {Color} = require("scenegraph"); 
+const {Color, Shadow} = require("scenegraph"); 
 var shadowList = [];
 var nodeList = [];
 let renameColorNum = 0, newColorNum = 0;
 
-function rectangleHandlerFunction(selection) { 
+function findSelectedShadowHandleFunction(selection) { 
 	// 初始化
 	shadowList = [];
 	nodeList = [];
@@ -24,7 +24,7 @@ function rectangleHandlerFunction(selection) {
 
 	// for test
 	if (JSON.stringify(shadowList[0]) == JSON.stringify(shadowList[1])) console.log("ok");
-	showAlert(newColorNum, renameColorNum);
+	//showAlert(newColorNum, renameColorNum);
 
 }
 
@@ -43,6 +43,28 @@ function traverseChildrenToFindShadow(root){
 		}
 	}
 }
+
+// 遍历匹配阴影
+function traverseChildrenToChangeShadow(root, shadowMatch, shadowChange){
+	if (root.isContainer){
+		root.children.forEach((children,i)=>{
+			traverseChildrenToChangeShadow(children, shadowMatch, shadowChange);
+		})
+	} else {
+		if (root.shadow != null){
+			console.log("start matching!"); 
+			// 匹配并替换阴影
+			console.log(shadowMatch);
+			//console.log(root.shadow);
+			if (JSON.stringify(shadowMatch) == JSON.stringify(root.shadow)){
+				root.shadow = shadowChange;
+				console.log("Change!"); 
+			}
+			
+		}
+	}
+}
+
 
 // 输出阴影信息
 function outputShadowDetails(){
@@ -100,11 +122,12 @@ function outputParentDetails(child){
 }
 
 let panel;
+let shadowNum = 0;
 function create() {
+	
 	// [1]
 	const html= `
 	<style>
-	
 		.asset {
 			margin: 8px 0px;
 			padding: 8px;
@@ -150,22 +173,28 @@ function create() {
 	
 
 	<form id="main">
-		<label>
-			<span>color hex</span>
-			<input type="text" placeholder="#00000000" id="inputColor">
-		</label>
+		<div>
+			<label>
+				<span>color hex</span>
+				<input type="text" placeholder="#000000" id="inputHex">
+			</label>
+			<label>
+				<span>opacity</span>
+				<input type="text" placeholder="1.0" value="1.0" id="inputOpacity">
+			</label>
+		</div>
 		<div class="grid">
 			<label class="grid">
 				<span>x</span>
-				<input type="number" placeholder="0" id="inputX">
+				<input type="number" placeholder="0" value="0" id="inputX">
 			</label>
 			<label class="grid">
 				<span>y</span>
-				<input type="number" placeholder="0" id="inputY">
+				<input type="number" placeholder="0" value="0" id="inputY">
 			</label>
 			<label class="grid">
 				<span>blur</span>
-				<input type="number" placeholder="0" id="inputBlur">
+				<input type="number" placeholder="0" value="0" id="inputBlur">
 			</label>
 		</div>
 
@@ -194,49 +223,8 @@ function create() {
 	</div>
 		
 	
-	`
-	const htmlbackup = `
-	<style>
-		.break {
-			flex-wrap: wrap;
-		}
-		label.row > span {
-			color: #8E8E8E;
-			width: 20px;
-			text-align: right;
-			font-size: 9px;
-		}
-		label.row input {
-			flex: 1 1 auto;
-		}
-		form {
-			width:90%;
-			padding: 0px;
-		}
-		.show {
-			display: block;
-		}
-		.hide {
-			display: none;
-		}
-	</style>
-	
-	<form id="main">
-		<div class="row break">
-			<label class="row">
-				<span>↕︎</span>
-				<input type="number" uxp-quiet="true" id="txtV" value="10" placeholder="Height" />
-			</label>
-			<label class="row">
-				<span>↔︎</span>
-				<input type="number" uxp-quiet="true" id="txtH" value="10" placeholder="Width" />
-			</label>
-		</div>
-		<footer><button id="ok" type="submit" uxp-variant="cta">Apply</button></footer>
-	</form>
-	
-	<p id="warning">This plugin requires you to select a rectangle in the document. Please select a rectangle.</p>
 	`;
+	
 	/*
 	  function increaseRectangleSize() { // [2]
 		const { editDocument } = require("application"); // [3]
@@ -252,12 +240,16 @@ function create() {
 	  }*/
 
 	  
-	  function findShadows(){
+	  function generateShadowList(){
 		const { editDocument } = require("application");
-		console.log("find!");
+		let shadowAssets = panel.querySelector("#shadowList");
 		editDocument({ editLabel: "generate shadow list"}, function(selection) {
 			shadowList = [];
 			nodeList = [];
+			
+			while (shadowAssets.firstChild){
+				shadowAssets.removeChild(shadowAssets.lastChild);
+			} 
 
 			let select = selection.items;
 			select.forEach((node)=>{traverseChildrenToFindShadow(node);});
@@ -272,31 +264,55 @@ function create() {
 				<button class="editbtn" uxp-variant="action">apply</button>
 			`
 			
-			for (var i = 0; i < shadowList.length; i++) {
-				let shadow = shadowList[i];
-				let node = nodeList[i];
+			for (var j = 0; j < shadowList.length; j++) {
+				let shadow = shadowList[j];
 				let alpha = (shadow.color.toRgba().a/255).toFixed(2);
 
 				let asset = document.createElement("div");
 				asset.className = "asset";
+				asset.id = j;
 				asset.innerHTML = initHTML;
 				asset.querySelector(".color").style.background = shadow.color.toHex(true);
+				asset.querySelector(".color").style.opacity = alpha;
 				asset.querySelector(".hex").textContent = shadow.color.toHex(true);
 				asset.querySelector(".alpha").textContent = alpha;
-				asset.querySelector(".x").textContent = shadow.x;
+				if (shadow.x != 0) asset.querySelector(".x").textContent = shadow.x;
 				asset.querySelector(".y").textContent = shadow.y;
 				asset.querySelector(".blur").textContent = shadow.blur;
-				asset.querySelector(".editbtn").id = i;
+
+				let editbtn = asset.querySelector(".editbtn");
+				editbtn.id = "editbtn_"+j;
+				let shadowid = j;
+				editbtn.addEventListener("click", () => {applyChange(shadowid);});
 
 				document.querySelector("#shadowList").appendChild(asset);
+
+				shadowNum++;
 			}
 
+		})
+	  }
+
+	  function applyChange(i){
+		
+		const { editDocument } = require("application");
+		editDocument({ editLabel: "apply shadow change"}, function(selection,documentRoot) {
+		  let hex = panel.querySelector("#inputHex").value;
+		  let opacity = panel.querySelector("#inputOpacity").value;
+		  let x = Number(panel.querySelector("#inputX").value);
+		  let y = Number(panel.querySelector("#inputY").value);
+		  let blur = Number(panel.querySelector("#inputBlur").value);
+
+		  let shadowChange = new Shadow(x,y,blur,new Color(hex, opacity), true);
+		  console.log(shadowChange);
+		  traverseChildrenToChangeShadow(documentRoot, shadowList[i], shadowChange);
 		})
 	  }
 	
 	  panel = document.createElement("div"); // [9]
 	  panel.innerHTML = html; // [10]
-	  panel.querySelector("form").addEventListener("submit", findShadows); // [11]
+	  panel.querySelector("form").addEventListener("submit", generateShadowList); // [11]
+	  
 	
 	  return panel; // [12]
 }
@@ -330,6 +346,6 @@ module.exports = {
 		}
 	},
     commands: {
-        createRectangle: rectangleHandlerFunction
+        createRectangle: findSelectedShadowHandleFunction
     }
 };
