@@ -11,11 +11,13 @@
  */
 
 
-const {Rectangle, Color} = require("scenegraph"); 
+const {Rectangle, Color, Text} = require("scenegraph"); 
+let commands = require("commands");
 const { alert } = require("./lib/dialogs.js");
 var assets = require("assets");
 var newColorNum, renameColorNum;
 var fillList = [], fillNodeList = [];
+var colorList = [], colorNodeList = [];
 
 function ColorAddHandlerFunction(selection) { 
     newColorNum=0;renameColorNum=0;
@@ -34,6 +36,9 @@ function traverseChildrenForColors(root){
             traverseChildrenForColors(children);
         })
     } else {
+        if (root.hasDefaultName == false) console.log("name");
+        if (root.constructor.name == "Rectangle") console.log("rectangle");
+        if (root.fill.constructor.name == "Color") console.log("Color");
         if (root.constructor.name == "Rectangle" && root.fill.constructor.name == "Color" && root.hasDefaultName == false){
             // only rename
             if (assets.colors.delete(new Color(root.fill))==1) {
@@ -42,7 +47,7 @@ function traverseChildrenForColors(root){
                 assets.colors.add({name: root.name, color: root.fill});
                 console.log("color " + root.name + " is added");
             }
-            /*
+            
             if (assets.colors.delete(new Color(root.fill))==1) {
                 console.log("color deleted")
                 renameColorNum++;
@@ -51,7 +56,7 @@ function traverseChildrenForColors(root){
             assets.colors.add({name: root.name, color: root.fill});
             console.log("color " + root.name + " is added");
             newColorNum++;
-            */
+            
         }
     }
 }
@@ -77,8 +82,11 @@ function OutColorAssetsHandlerFunction(){
 
 function FillColorHandlerFunction(selection){
     let select = selection.items;
+    colorList = [], colorNodeList = [];
+    //fillList = [], fillNodeList = [];
     select.forEach((root)=>{traverseChildrenToFindFill(root);});
-    outputNodeDetails(fillList, fillNodeList);
+    outputColorDetails(colorList, selection);
+    //outputNodeDetails(fillList, fillNodeList);
 }
 
 function traverseChildrenToFindFill(root){
@@ -87,12 +95,90 @@ function traverseChildrenToFindFill(root){
             traverseChildrenToFindFill(children);
         })
     } else {
-        if (root.fill != null){
+        /*
+        if (root.fill != null ){
             // 有填充
             fillList.push(root.fill);
             fillNodeList.push(root);
+        }*/
+        
+        if (root.opacity != 0 && root.visible && (root.fill != null || root.stroke != null)){
+            var colorObj = {};
+            if (root.fill != null && root.fillEnabled){
+                colorObj['isFill'] = true;
+                colorObj['fill'] = root.fill;
+                colorObj['fillName'] = findColorName(root.fill);
+            } else colorObj['isFill'] = false;
+            if (root.stroke != null && root.strokeEnabled){
+                colorObj['isStroke'] = true;
+                colorObj['stroke'] = root.stroke;
+                colorObj['strokeName'] = findColorName(root.stroke);
+            } else colorObj['isStroke'] = false;
+            colorObj['source'] = root;
+            colorList.push(colorObj);
+            //colorNodeList.push(root);
         }
     }
+}
+
+// 输出 color 信息
+function outputColorDetails(colorList, selection){
+    for (var i = 0; i < colorList.length; i++) {
+        let color = colorList[i];
+        var bounds = getSymbolPos(color.source);
+        console.log(bounds);
+        createColorExample(color, bounds, selection);
+    }
+}
+
+// 获取symbol信息
+function getSymbolPos(child){
+    if (child.symbolId != null){
+        // is symbol
+        console.log(child.name);
+        console.log(child.boundsInParent);
+        return child.boundsInParent;
+    }
+    else if (child.parent != null){
+        //console.log(child.name);
+        return getSymbolPos(child.parent);
+    }
+}
+
+// 画颜色示意矩形
+function createColorExample(colorObj, bound, selection){
+    const newRect = new Rectangle();
+	newRect.width = 16;
+	newRect.height = 16;
+    newRect.fill = colorObj.fill;
+    newRect.stroke = colorObj.stroke;
+    
+
+    const newComment = new Text();
+    if (colorObj.isFill && colorObj.isStroke){
+        newComment.text = "fill:"+ findColorName(colorObj.fill) + "\n" + "stroke:" + findColorName(colorObj.stroke);
+    }
+    else if (colorObj.isFill) newComment.text = findColorName(colorObj.fill);
+    else if (colorObj.isStroke) newComment.text = findColorName(colorObj.stroke);
+    console.log(newComment);
+    newComment.styleRanges = [
+        {
+          length: newComment.text.length,
+          fontFamily: "苹方-简",
+          fontStyle: "Semibold",
+          fill: new Color("#fff"),
+          fontSize: 16
+        }
+      ];
+
+    selection.insertionParent.addChild(newRect);
+    newRect.moveInParentCoordinates(bound.x+bound.width+72, bound.y);
+    selection.insertionParent.addChild(newComment);
+    newComment.moveInParentCoordinates(bound.x+bound.width+72+28, bound.y+13);
+
+    selection.items = [newRect, newComment];
+    commands.group();
+
 }
 
 // 输出阴影信息
