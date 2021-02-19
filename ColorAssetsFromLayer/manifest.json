@@ -20,16 +20,8 @@
     "commandId" : "addColors"
   },{
     "type" : "menu",
-    "label" : "sort color Assets",
-    "commandId" : "sortColors"
-  },{
-    "type" : "menu",
-    "label" : "output assets color name",
-    "commandId" : "outputColors"
-  },{
-    "type" : "menu",
     "label" : "output fill color",
     "commandId" : "fillColors"
   }],
-  "version" : "0.8.0"
+  "version" : "0.9.0"
 }

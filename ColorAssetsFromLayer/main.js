@@ -90,7 +90,7 @@ function FillColorHandlerFunction(selection){
 }
 
 function traverseChildrenToFindFill(root){
-    if (root.isContainer){
+    if (root.isContainer && root.visible && root.constructor.name != "BooleanGroup" && root.opacity != 0){
         root.children.forEach((children,i)=>{
             traverseChildrenToFindFill(children);
         })
@@ -102,7 +102,7 @@ function traverseChildrenToFindFill(root){
             fillNodeList.push(root);
         }*/
         
-        if (root.opacity != 0 && root.visible && (root.fill != null || root.stroke != null)){
+        if (root.opacity != 0 && root.visible && ((root.fill != null && root.fill.constructor.name == "Color") || root.stroke != null)){
             var colorObj = {};
             if (root.fill != null && root.fillEnabled){
                 colorObj['isFill'] = true;
@@ -155,7 +155,7 @@ function createColorExample(colorObj, bound, selection){
     
 
     const newComment = new Text();
-    if (colorObj.isFill && colorObj.isStroke){
+    if (colorObj.fill && colorObj.stroke){
         newComment.text = "fill:"+ findColorName(colorObj.fill) + "\n" + "stroke:" + findColorName(colorObj.stroke);
     }
     else if (colorObj.isFill) newComment.text = findColorName(colorObj.fill);
@@ -217,8 +217,8 @@ async function showAlert(newColorNum, renameColorNum){
 module.exports = {
     commands: {
         addColors: ColorAddHandlerFunction,
-        sortColors: SortColorAssetsHandlerFunction,
-        outputColors: OutColorAssetsHandlerFunction,
+        //sortColors: SortColorAssetsHandlerFunction,
+        //outputColors: OutColorAssetsHandlerFunction,
         fillColors: FillColorHandlerFunction
     }
 };
