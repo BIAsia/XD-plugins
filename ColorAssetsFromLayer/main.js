@@ -90,21 +90,20 @@ function FillColorHandlerFunction(selection){
 }
 
 function traverseChildrenToFindFill(root){
-    if (root.isContainer && root.visible && root.constructor.name != "BooleanGroup" && root.opacity != 0){
-        root.children.forEach((children,i)=>{
-            traverseChildrenToFindFill(children);
-        })
-    } else {
-        /*
-        if (root.fill != null ){
-            // 有填充
-            fillList.push(root.fill);
-            fillNodeList.push(root);
-        }*/
-        
-        if (root.opacity != 0 && root.visible && ((root.fill != null && root.fill.constructor.name == "Color") || root.stroke != null)){
+    if (root.opacity != 0 && root.visible){
+        if (root.isContainer && root.constructor.name != "BooleanGroup"){
+            root.children.forEach((children,i)=>{
+                traverseChildrenToFindFill(children);
+            })
+        } else if(!root.isContainer){
+            /*
+            if (root.fill != null ){
+                // 有填充
+                fillList.push(root.fill);
+                fillNodeList.push(root);
+            }*/
             var colorObj = {};
-            if (root.fill != null && root.fillEnabled){
+            if (root.fill != null && root.fillEnabled && root.fill.constructor.name == "Color"){
                 colorObj['isFill'] = true;
                 colorObj['fill'] = root.fill;
                 colorObj['fillName'] = findColorName(root.fill);
@@ -115,8 +114,8 @@ function traverseChildrenToFindFill(root){
                 colorObj['strokeName'] = findColorName(root.stroke);
             } else colorObj['isStroke'] = false;
             colorObj['source'] = root;
-            colorList.push(colorObj);
-            //colorNodeList.push(root);
+
+            if (colorObj.isFill || colorObj.isStroke) colorList.push(colorObj);
         }
     }
 }
