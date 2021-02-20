@@ -146,6 +146,19 @@ function getSymbolPos(child){
 
 // 画颜色示意矩形
 function createColorExample(colorObj, bound, selection){
+    const newName = new Text();
+    newName.text = findTokenLeastName(colorObj.source);
+    console.log(newName);
+    newName.styleRanges = [
+        {
+          length: newName.text.length,
+          fontFamily: "苹方-简",
+          fill: new Color("#a0a0a0"),
+          fontSize: 14
+        }
+      ];
+
+
     const newRect = new Rectangle();
 	newRect.width = 16;
 	newRect.height = 16;
@@ -165,22 +178,51 @@ function createColorExample(colorObj, bound, selection){
           length: newComment.text.length,
           fontFamily: "苹方-简",
           fontStyle: "Semibold",
-          fill: new Color("#fff"),
+          fill: new Color("#000"),
           fontSize: 16
         }
       ];
 
+    selection.insertionParent.addChild(newName);
+    newName.moveInParentCoordinates(bound.x+bound.width+72, bound.y);
     selection.insertionParent.addChild(newRect);
-    newRect.moveInParentCoordinates(bound.x+bound.width+72, bound.y);
+    newRect.moveInParentCoordinates(bound.x+bound.width+72, bound.y+14);
     selection.insertionParent.addChild(newComment);
-    newComment.moveInParentCoordinates(bound.x+bound.width+72+28, bound.y+13);
+    newComment.moveInParentCoordinates(bound.x+bound.width+72+28, bound.y+14+13);
+    
 
-    selection.items = [newRect, newComment];
+
+    selection.items = [newName, newRect, newComment];
     commands.group();
 
 }
 
-// 输出阴影信息
+function findTokenLeastName(source){
+    if (source.hasDefaultName == false){
+        return source.name;
+    }
+    switch (source.constructor.name){
+        case "BooleanGroup":
+            return "icon";
+            break;
+        case "Path":
+            return "icon";
+            break;
+        case "Rectangle":
+            return "background";
+            break;
+        case "Text":
+            return "text";
+            break;
+        case "Line":
+            return "cursor";
+            break;
+        default:
+            return "not supported"
+    }
+}
+
+// 输出路径信息
 function outputNodeDetails(colorList, nodeList){
     for (var i = 0; i < colorList.length; i++) {
         let color = colorList[i];
