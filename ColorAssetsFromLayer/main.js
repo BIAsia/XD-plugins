@@ -154,7 +154,7 @@ function createColorExample(colorObj, bound, selection){
     
 
     const newComment = new Text();
-    if (colorObj.fill && colorObj.stroke){
+    if (colorObj.isFill && colorObj.isStroke){
         newComment.text = "fill:"+ findColorName(colorObj.fill) + "\n" + "stroke:" + findColorName(colorObj.stroke);
     }
     else if (colorObj.isFill) newComment.text = findColorName(colorObj.fill);
@@ -205,6 +205,7 @@ function findColorName(color){
     for (let i = 0; i < allColors.length; i++){
         if (JSON.stringify(allColors[i].color) == JSON.stringify(color)) return allColors[i].name;
     }
+    return "No name";
 }
 
 async function showAlert(newColorNum, renameColorNum){
