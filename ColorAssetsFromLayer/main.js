@@ -19,6 +19,7 @@ var assets = require("assets");
 var newColorNum, renameColorNum;
 var fillList = [], fillNodeList = [];
 var colorList = [], colorNodeList = [];
+var path = [], tokenChart;
 
 function ColorAddHandlerFunction(selection) { 
     newColorNum=0;renameColorNum=0;
@@ -96,7 +97,7 @@ function traverseChildrenToFindFill(root){
             root.children.forEach((children,i)=>{
                 traverseChildrenToFindFill(children);
             })
-        } else if(!root.isContainer){
+        } else{
             /*
             if (root.fill != null ){
                 // 有填充
@@ -198,6 +199,8 @@ function createColorExample(colorObj, bound, selection){
 
 }
 
+
+
 function findTokenLeastName(source){
     if (source.hasDefaultName == false){
         return source.name;
@@ -223,6 +226,21 @@ function findTokenLeastName(source){
             break;
         default:
             return "not supported"
+    }
+}
+
+// 寻找有效路径信息
+function findTokenPath(child){
+    if (child.parent != null && child.parent.symbolId == null){
+        findTokenPath(child.parent);
+    }
+    if (child.hasDefaultName == false && child.isContainer){
+        //console.log(child.name);
+        path.push(child.name);
+    }
+    if (child.parent.symbolId != null){
+        //console.log(child.parent.name);
+        path.push(child.parent.name);
     }
 }
 
@@ -271,8 +289,8 @@ async function ColorSaveHandlerFunction(selection){
 
 function generateColorInCSV(){
     var assets = require("assets"), allColors = assets.colors.get();
-    let colorChart = "";
-    for (var i = 0; i < allColors.length; i++){
+    let colorChart = "name, hex, rgba\r\n";
+    for (var i = allColors.length-1; i >= 0 ; i--){
         colorChart += allColors[i].name + "," 
                     + allColors[i].color.toHex(true) + ","
                     + "\"("
@@ -286,12 +304,47 @@ function generateColorInCSV(){
     return colorChart;
 }
 
+async function ComponentColorSaveHandlerFunction(selection){
+    //console.log(allColors);
+    let select = selection.items;
+    colorList = [], colorNodeList = [];
+    tokenChart = "token, color\r\n";
+    //fillList = [], fillNodeList = [];
+    select.forEach((root)=>{
+        if(root.symbolId != null)
+            traverseChildrenToFindFill(root);
+    });
+    for (var i = 0; i < colorList.length; i++) {
+        generateTokenInCSV(colorList[i]);
+    }
+    //console.log(tokenChart);
+    //const newFile = await fs.getFileForSaving("token-asset.csv");
+    //await newFile.write(tokenChart);
+ 
+}
+
+function generateTokenInCSV(colorObj){
+    
+    path = [];
+    findTokenPath(colorObj.source);
+    let tokenName = "", colorName;
+    for (var i = 0; i < path.length; i++){
+        tokenName += path[i] + "-";
+    }
+    tokenName += findTokenLeastName(colorObj.source) + "-color";
+    colorName = colorObj.isFill? colorObj.fillName:colorObj.strokeName;
+    tokenChart += tokenName + "," + colorName + "\r\n";
+    console.log(colorName);
+
+}
+
 module.exports = {
     commands: {
         addColors: ColorAddHandlerFunction,
         saveColors: ColorSaveHandlerFunction,
         //sortColors: SortColorAssetsHandlerFunction,
         //outputColors: OutColorAssetsHandlerFunction,
-        fillColors: FillColorHandlerFunction
+        fillColors: FillColorHandlerFunction,
+        saveComponentColors: ComponentColorSaveHandlerFunction
     }
 };

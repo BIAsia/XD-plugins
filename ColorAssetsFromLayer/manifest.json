@@ -24,8 +24,12 @@
     "commandId" : "saveColors"
   },{
     "type" : "menu",
-    "label" : "output fill color",
+    "label" : "output component color",
     "commandId" : "fillColors"
+  },{
+    "type" : "menu",
+    "label" : "save selected component token",
+    "commandId" : "saveComponentColors"
   }],
   "version" : "0.9.0"
 }
