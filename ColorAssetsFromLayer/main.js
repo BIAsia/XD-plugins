@@ -14,6 +14,7 @@
 const {Rectangle, Color, Text} = require("scenegraph"); 
 let commands = require("commands");
 const { alert } = require("./lib/dialogs.js");
+const fs = require("uxp").storage.localFileSystem;
 var assets = require("assets");
 var newColorNum, renameColorNum;
 var fillList = [], fillNodeList = [];
@@ -208,6 +209,9 @@ function findTokenLeastName(source){
         case "Path":
             return "icon";
             break;
+        case "Ellipse":
+            return "icon";
+            break;
         case "Rectangle":
             return "background";
             break;
@@ -256,9 +260,36 @@ async function showAlert(newColorNum, renameColorNum){
     "Go to Assets Panel to see your colors :D"); //[2]
 }
 
+async function ColorSaveHandlerFunction(selection){
+    //console.log(allColors);
+    let colorChart = generateColorInCSV();
+    
+    const newFile = await fs.getFileForSaving("color-asset.csv");
+    await newFile.write(colorChart);
+ 
+}
+
+function generateColorInCSV(){
+    var assets = require("assets"), allColors = assets.colors.get();
+    let colorChart = "";
+    for (var i = 0; i < allColors.length; i++){
+        colorChart += allColors[i].name + "," 
+                    + allColors[i].color.toHex(true) + ","
+                    + "\"("
+                    + allColors[i].color.toRgba().r + ","
+                    + allColors[i].color.toRgba().g + ","
+                    + allColors[i].color.toRgba().b + ","
+                    + (allColors[i].color.toRgba().a/255).toFixed(2) 
+                    + ")\""
+                    + "\r\n";
+    }
+    return colorChart;
+}
+
 module.exports = {
     commands: {
         addColors: ColorAddHandlerFunction,
+        saveColors: ColorSaveHandlerFunction,
         //sortColors: SortColorAssetsHandlerFunction,
         //outputColors: OutColorAssetsHandlerFunction,
         fillColors: FillColorHandlerFunction

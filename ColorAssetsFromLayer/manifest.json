@@ -20,6 +20,10 @@
     "commandId" : "addColors"
   },{
     "type" : "menu",
+    "label" : "save asset colors to file",
+    "commandId" : "saveColors"
+  },{
+    "type" : "menu",
     "label" : "output fill color",
     "commandId" : "fillColors"
   }],
